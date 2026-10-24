@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../model/user_model.dart';
+import '../data/services/storage_service.dart';
 import 'main_layout.dart';
 
 class WizardView extends StatefulWidget {
@@ -35,12 +36,35 @@ class _WizardViewState extends State<WizardView> {
     }
   }
 
-  void _finishWizard() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => MainLayout(user: _user)),
-    );
-  }
+  Future<void> _finishWizard() async {
+      // Masukkan isi TextField "Lainnya" jika ada
+      if (_user.healthConditions.contains('Lainnya')) {
+        _user.healthConditions.remove('Lainnya');
+        if (_otherHealthCtrl.text.trim().isNotEmpty) {
+          _user.healthConditions.add(_otherHealthCtrl.text.trim());
+        }
+      }
+      if (_user.allergies.contains('Lainnya')) {
+        _user.allergies.remove('Lainnya');
+        if (_otherAllergyCtrl.text.trim().isNotEmpty) {
+          _user.allergies.add(_otherAllergyCtrl.text.trim());
+        }
+      }
+      if (_user.dietPreferences.contains('Lainnya')) {
+        _user.dietPreferences.remove('Lainnya');
+        if (_otherDietCtrl.text.trim().isNotEmpty) {
+          _user.dietPreferences.add(_otherDietCtrl.text.trim());
+        }
+      }
+
+      await StorageService.saveUser(_user);
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => MainLayout(user: _user)),
+      );
+    }
 
   void _toggleSelection(List<String> list, String item) {
     setState(() {

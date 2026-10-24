@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "573373990196",
+    "project_id": "food-lable-scanner",
+    "storage_bucket": "food-lable-scanner.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:573373990196:android:c2fa5a808b2afca2cd1161",
+        "android_client_info": {
+          "package_name": "com.haminsatu.food_label_scanner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMmeVg0cEV1XSSVFbft2dC1vlahpYUY9E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

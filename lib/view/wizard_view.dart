@@ -13,20 +13,33 @@ class _WizardViewState extends State<WizardView> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   
-  // Inisialisasi data pengguna
   final UserModel _user = UserModel();
+  
+  final TextEditingController _otherHealthCtrl = TextEditingController();
+  final TextEditingController _otherAllergyCtrl = TextEditingController();
+  final TextEditingController _otherDietCtrl = TextEditingController();
 
-  void _nextPage() {
+  void _nextStep() {
     if (_currentPage < 4) {
       _pageController.nextPage(
-          duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
+          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
     } else {
-      // Pindah ke halaman utama dan bawa data _user
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MainLayout(user: _user)),
-      );
+      _finishWizard();
     }
+  }
+
+  void _prevStep() {
+    if (_currentPage > 0) {
+      _pageController.previousPage(
+          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+    }
+  }
+
+  void _finishWizard() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => MainLayout(user: _user)),
+    );
   }
 
   void _toggleSelection(List<String> list, String item) {
@@ -42,113 +55,285 @@ class _WizardViewState extends State<WizardView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Langkah ${_currentPage + 1} dari 5'),
-        backgroundColor: Colors.teal[700],
-      ),
-      body: Column(
-        children: [
-          LinearProgressIndicator(
-            value: (_currentPage + 1) / 5,
-            backgroundColor: Colors.teal[100],
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.teal[700]!),
-          ),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              onPageChanged: (int page) {
-                setState(() {
-                  _currentPage = page;
-                });
-              },
-              children: [
-                _buildStep1(),
-                _buildStep2(),
-                _buildMultiSelect('Kondisi Kesehatan', ['Diabetes', 'Hipertensi', 'Kolesterol', 'Lainnya'], _user.healthConditions),
-                _buildMultiSelect('Alergi', ['Kacang', 'Seafood', 'Susu', 'Lainnya'], _user.allergies),
-                _buildMultiSelect('Preferensi Diet', ['Halal', 'Vegan', 'Vegetarian', 'Lainnya'], _user.dietPreferences),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: Colors.teal[700],
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Personalisasi', 
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.teal[900])),
+                      TextButton(
+                        onPressed: _finishWizard,
+                        style: TextButton.styleFrom(
+                          minimumSize: Size.zero,
+                          padding: EdgeInsets.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text('Lewati', style: TextStyle(color: Colors.teal[600], fontWeight: FontWeight.bold, fontSize: 14)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: List.generate(5, (index) {
+                      return Expanded(
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: index <= _currentPage ? Colors.teal[500] : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('LANGKAH ${_currentPage + 1} DARI 5', 
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[400], letterSpacing: 1.2)),
+                ],
               ),
-              onPressed: _nextPage,
-              child: Text(_currentPage == 4 ? 'Selesai & Masuk' : 'Lanjut'),
             ),
+            
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                onPageChanged: (int page) {
+                  setState(() => _currentPage = page);
+                },
+                children: [
+                  _buildStep1(),
+                  _buildStep2(),
+                  _buildStep3(),
+                  _buildStep4(),
+                  _buildStep5(),
+                ],
+              ),
+            ),
+
+            Container(
+              padding: const EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: Colors.grey.shade100)),
+              ),
+              child: Row(
+                children: [
+                  if (_currentPage > 0) ...[
+                    Expanded(
+                      flex: 1,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Colors.grey[100],
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: _prevStep,
+                        child: Text('Kembali', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.bold, fontSize: 14)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: Colors.teal[600],
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: _nextStep,
+                      child: Text(_currentPage == 4 ? 'Mulai Aplikasi' : 'Selanjutnya', 
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _inputStyle(String label, {IconData? prefixIcon}) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Colors.grey[600], fontSize: 14, fontWeight: FontWeight.w600),
+      filled: true,
+      fillColor: Colors.grey[50],
+      prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: Colors.grey[400]) : null,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.teal.shade500)),
+    );
+  }
+
+  Widget _buildStepHeader(String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+        const SizedBox(height: 4),
+        Text(subtitle, style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildStep1() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStepHeader('Data Diri', 'Mari kenalan agar aplikasi lebih personal.'),
+          TextField(
+            onChanged: (val) => _user.name = val,
+            decoration: _inputStyle('Nama Panggilan (Opsional)', prefixIcon: Icons.person_outline),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            onChanged: (val) => _user.age = val,
+            keyboardType: TextInputType.number,
+            decoration: _inputStyle('Usia (Tahun)'),
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            value: _user.gender.isEmpty ? null : _user.gender,
+            decoration: _inputStyle('Jenis Kelamin'),
+            items: ['Laki-laki', 'Perempuan'].map((String value) {
+              return DropdownMenuItem<String>(value: value, child: Text(value));
+            }).toList(),
+            onChanged: (val) => setState(() => _user.gender = val!),
           )
         ],
       ),
     );
   }
 
-  Widget _buildStep1() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            onChanged: (val) => _user.name = val,
-            decoration: const InputDecoration(labelText: 'Nama Lengkap (Opsional)'),
-          ),
-          TextField(
-            onChanged: (val) => _user.age = val,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Usia'),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildStep2() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildStepHeader('Profil Tubuh', 'Untuk menghitung IMT & kebutuhan nutrisi harian.'),
           TextField(
             onChanged: (val) => _user.height = val,
-            decoration: const InputDecoration(labelText: 'Tinggi Badan (cm)'),
+            keyboardType: TextInputType.number,
+            decoration: _inputStyle('Tinggi Badan (cm)'),
           ),
+          const SizedBox(height: 16),
           TextField(
             onChanged: (val) => _user.weight = val,
-            decoration: const InputDecoration(labelText: 'Berat Badan (kg)'),
+            keyboardType: TextInputType.number,
+            decoration: _inputStyle('Berat Badan (kg)'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMultiSelect(String title, List<String> options, List<String> targetList) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
+  Widget _buildStep3() {
+    return _buildMultiSelectScreen(
+      title: 'Kondisi Kesehatan',
+      subtitle: 'Pilih kondisi yang Anda miliki (Bisa >1).',
+      options: ['Diabetes', 'Hipertensi', 'Kolesterol/Jantung', 'Ginjal', 'Diet Berat Badan', 'Lainnya'],
+      targetList: _user.healthConditions,
+      otherCtrl: _otherHealthCtrl,
+      otherPlaceholder: 'Sebutkan kondisi medis lainnya...',
+    );
+  }
+
+  Widget _buildStep4() {
+    return _buildMultiSelectScreen(
+      title: 'Alergen',
+      subtitle: 'Penting: Kami akan memberi peringatan untuk ini.',
+      options: ['Seafood', 'Susu Sapi/Laktosa', 'Kacang', 'Telur', 'Gluten', 'Lainnya'],
+      targetList: _user.allergies,
+      otherCtrl: _otherAllergyCtrl,
+      otherPlaceholder: 'Sebutkan alergi lainnya...',
+    );
+  }
+
+  Widget _buildStep5() {
+    return _buildMultiSelectScreen(
+      title: 'Preferensi Diet',
+      subtitle: 'Gaya hidup atau pola makan khusus Anda.',
+      options: ['Halal', 'Vegetarian', 'Vegan', 'Lainnya'],
+      targetList: _user.dietPreferences,
+      otherCtrl: _otherDietCtrl,
+      otherPlaceholder: 'Sebutkan diet khusus lainnya...',
+    );
+  }
+
+  // Helper untuk Chip Multi-select (Step 3, 4, 5)
+  Widget _buildMultiSelectScreen({
+    required String title,
+    required String subtitle,
+    required List<String> options,
+    required List<String> targetList,
+    required TextEditingController otherCtrl,
+    required String otherPlaceholder,
+  }) {
+    bool isOtherSelected = targetList.contains('Lainnya');
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
+          _buildStepHeader(title, subtitle),
           Wrap(
-            spacing: 8.0,
+            spacing: 10.0,
+            runSpacing: 10.0,
             children: options.map((option) {
               final isSelected = targetList.contains(option);
-              return ChoiceChip(
-                label: Text(option),
-                selected: isSelected,
-                selectedColor: Colors.teal[700],
-                labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87),
-                onSelected: (bool selected) {
+              return GestureDetector(
+                onTap: () {
                   _toggleSelection(targetList, option);
+                  if (option == 'Lainnya' && !isSelected == false) {
+                    otherCtrl.clear();
+                  }
                 },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.teal[50] : Colors.grey[50],
+                    border: Border.all(color: isSelected ? Colors.teal[500]! : Colors.grey.shade200),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Text(
+                    option,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? Colors.teal[700] : Colors.grey[600],
+                    ),
+                  ),
+                ),
               );
             }).toList(),
           ),
+          if (isOtherSelected) ...[
+            const SizedBox(height: 20),
+            TextField(
+              controller: otherCtrl,
+              decoration: _inputStyle(otherPlaceholder),
+            )
+          ]
         ],
       ),
     );

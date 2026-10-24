@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../model/user_model.dart';
 import 'scan_view.dart';
+import 'home_view.dart';
+import 'profile_view.dart';
 
 class MainLayout extends StatefulWidget {
-  final UserModel user; // Menerima data dari Wizard
+  final UserModel user;
 
   const MainLayout({Key? key, required this.user}) : super(key: key);
 
@@ -14,35 +16,72 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   int _selectedIndex = 0;
 
+  void _onProfileSaved() {
+    setState(() {
+      _selectedIndex = 0;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Tampilan dinamis berdasarkan tab yang dipilih
     final List<Widget> pages = [
-      Center(child: Text('Halo, ${widget.user.name.isEmpty ? "Pengguna" : widget.user.name}\nSelamat datang di Beranda!')),
-      const Center(child: Text('Halaman Riwayat')),
-      Center(child: Text('Alergi Anda: ${widget.user.allergies.join(", ")}')), // Contoh panggil data di Profil
+      HomeView(user: widget.user),
+      ProfileView(user: widget.user, onSave: _onProfileSaved),
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('NutriScan'), backgroundColor: Colors.teal[700]),
-      body: pages[_selectedIndex],
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(child: pages[_selectedIndex]),
+      
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.teal[700],
+        backgroundColor: Colors.teal[600],
+        elevation: 4,
+        shape: const CircleBorder(),
         onPressed: () {
-          // Buka halaman kamera tanpa GetX
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const ScanView()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ScanView(user: widget.user)),
+          );
         },
-        child: const Icon(Icons.document_scanner),
+        child: const Icon(Icons.camera_alt, color: Colors.white, size: 28),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        selectedItemColor: Colors.teal[700],
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Riwayat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+      
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8.0,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(Icons.home_filled, 'Beranda', 0),
+              const SizedBox(width: 48),
+              _buildNavItem(Icons.person, 'Profil', 1),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final isSelected = _selectedIndex == index;
+    return InkWell(
+      onTap: () => setState(() => _selectedIndex = index),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: isSelected ? Colors.teal[600] : Colors.grey[400]),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? Colors.teal[600] : Colors.grey[400],
+            ),
+          )
         ],
       ),
     );

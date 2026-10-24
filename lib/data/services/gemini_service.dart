@@ -6,14 +6,12 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../../model/user_model.dart';
 
 class GeminiService {
-  // Tukar urutan: posisikan flash-lite di depan jika 3.8 sedang padat
+  // Hanya gunakan model Lite yang lebih stabil, ringan, dan tahan dari antrean server
   static const List<String> _supportedModels = [
     'gemini-3.5-flash-lite',
-    'gemini-3.8-flash',
   ];
 
   Future<ScanResultModel> analyzeFoodLabel(String imagePath, UserModel user) async {
-    // 1. KOMPRESS GAMBAR TERLEBIH DAHULU (Mencegah Deadline Exceeded / Timeout)
     File imageFile = File(imagePath);
     Uint8List imageBytes;
 
@@ -22,7 +20,7 @@ class GeminiService {
       final compressedResult = await FlutterImageCompress.compressAndGetFile(
         imageFile.absolute.path,
         targetPath,
-        quality: 70, // Kompres kualitas ke 70% agar ukuran file < 300KB
+        quality: 70, // Kompres ke 70% agar ukuran file kecil dan cepat diproses
         minWidth: 1024,
         minHeight: 1024,
       );
@@ -75,7 +73,7 @@ Respond ONLY in valid JSON with this exact structure (write summary, diet_note, 
 
     for (final modelName in _supportedModels) {
       try {
-        debugPrint('Mencoba analisis dengan model: $modelName');
+        debugPrint('Menganalisis dengan model stabil: $modelName');
         final model = FirebaseAI.googleAI().generativeModel(
           model: modelName,
           generationConfig: GenerationConfig(
@@ -89,17 +87,17 @@ Respond ONLY in valid JSON with this exact structure (write summary, diet_note, 
         ]);
 
         if (response.text != null && response.text!.isNotEmpty) {
-          debugPrint('Berhasil menggunakan model: $modelName');
+          debugPrint('Berhasil diproses dengan: $modelName');
           break;
         }
       } catch (e) {
-        debugPrint('Model $modelName gagal ($e), beralih ke model cadangan...');
+        debugPrint('Error pada model $modelName: $e');
         lastError = e;
       }
     }
 
     if (response == null || response.text == null) {
-      throw Exception('Gagal menganalisis gambar. Server sedang sibuk, silakan coba lagi. Detail: $lastError');
+      throw Exception('Gagal memproses gambar. Detail error: $lastError');
     }
 
     final rawText = response.text!;
